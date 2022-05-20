@@ -110,7 +110,7 @@ public class TwaProviderPicker {
         if (sPackageNameForTesting != null) {
             queryBrowsersIntent.setPackage(sPackageNameForTesting);
         }
-
+        String bestTwaProvider = null;
         String bestCctProvider = null;
         String bestBrowserProvider = null;
 
@@ -148,11 +148,19 @@ public class TwaProviderPicker {
 
             switch (launchMode) {
                 case LaunchMode.TRUSTED_WEB_ACTIVITY:
-                    Log.d(TAG, "Found TWA provider, finishing search: " + providerName);
-                    return new Action(LaunchMode.TRUSTED_WEB_ACTIVITY, providerName);
+                    if(providerName.equals("com.android.chrome")) {
+                        Log.d(TAG, "Found Chrome: " + providerName);
+                        return new Action(LaunchMode.TRUSTED_WEB_ACTIVITY, providerName);
+                    } else if (!providerName.equals("org.mozilla.firefox")) {
+                        if (bestTwaProvider == null) bestTwaProvider = providerName;
+                    }
+
                 case LaunchMode.CUSTOM_TAB:
                     Log.d(TAG, "Found Custom Tabs provider: " + providerName);
-                    if (bestCctProvider == null) bestCctProvider = providerName;
+                    if (bestCctProvider == null && !providerName.equals("org.mozilla.firefox")) {
+                        bestCctProvider = providerName;
+                    }
+                    if (bestBrowserProvider == null) bestBrowserProvider = providerName;
                     break;
                 case LaunchMode.BROWSER:
                     Log.d(TAG, "Found browser: " + providerName);
@@ -161,6 +169,11 @@ public class TwaProviderPicker {
             }
         }
 
+        if (bestTwaProvider != null) {
+            Log.d(TAG, "Couldn't Found Chrome, Found another TWA provider: "
+                    + bestCctProvider);
+            return new Action(LaunchMode.TRUSTED_WEB_ACTIVITY, bestTwaProvider);
+        }
         if (bestCctProvider != null) {
             Log.d(TAG, "Found no TWA providers, using first Custom Tabs provider: "
                     + bestCctProvider);
