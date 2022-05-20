@@ -129,15 +129,18 @@ public class TwaLauncher {
         mContext = context;
         mSessionId = sessionId;
         mTokenStore = tokenStore;
-        if (providerPackage == null) {
-            TwaProviderPicker.Action action =
+
+        TwaProviderPicker.Action action =
                     TwaProviderPicker.pickProvider(context.getPackageManager());
-            mProviderPackage = action.provider;
-            mLaunchMode = action.launchMode;
-        } else {
-            mProviderPackage = providerPackage;
-            mLaunchMode = TwaProviderPicker.LaunchMode.TRUSTED_WEB_ACTIVITY;
-        }
+        mProviderPackage = action.provider;
+        mLaunchMode = action.launchMode;
+        Log.d(TAG, "mProviderPackage -----> " + mProviderPackage);
+        // if (providerPackage == null) {
+            
+        // } else {
+        //     mProviderPackage = providerPackage;
+        //     mLaunchMode = TwaProviderPicker.LaunchMode.TRUSTED_WEB_ACTIVITY;
+        // }
     }
 
     /**
@@ -179,7 +182,14 @@ public class TwaLauncher {
             launchTwa(twaBuilder, customTabsCallback, splashScreenStrategy, completionCallback,
                     fallbackStrategy);
         } else {
-            fallbackStrategy.launch(mContext, twaBuilder, mProviderPackage, completionCallback);
+            if (mProviderPackage.equals("org.mozilla.firefox")) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, twaBuilder.getUri());
+                browserIntent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                mContext.startActivity(browserIntent);
+                return;
+            } else {
+                fallbackStrategy.launch(mContext, twaBuilder, mProviderPackage, completionCallback);
+            }
         }
 
         // Remember who we connect to as the package that is allowed to delegate notifications

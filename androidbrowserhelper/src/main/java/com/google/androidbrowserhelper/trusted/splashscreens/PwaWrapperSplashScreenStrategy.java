@@ -119,6 +119,7 @@ public class PwaWrapperSplashScreenStrategy implements SplashScreenStrategy {
         mProviderPackage = providerPackage;
         mProviderSupportsSplashScreens = TrustedWebUtils.areSplashScreensSupported(mActivity,
                 providerPackage, SplashScreenVersion.V1);
+        Log.w(TAG, "Provider----> " + providerPackage);
 
         if (!mProviderSupportsSplashScreens) {
             Log.w(TAG, "Provider " + providerPackage + " doesn't support splash screens");
