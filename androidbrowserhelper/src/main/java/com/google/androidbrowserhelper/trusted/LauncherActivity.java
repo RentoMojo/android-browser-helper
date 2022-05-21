@@ -221,6 +221,14 @@ public class LauncherActivity extends Activity {
         addShareDataIfPresent(twaBuilder);
 
         mTwaLauncher = createTwaLauncher();
+
+        if (mTwaLauncher.getProviderPackage().equals("org.mozilla.firefox")) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, twaBuilder.getUri());
+            browserIntent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            startActivity(browserIntent);
+            finish();
+            return;
+        }
         mTwaLauncher.launch(twaBuilder,
                 mCustomTabsCallback,
                 mSplashScreenStrategy,

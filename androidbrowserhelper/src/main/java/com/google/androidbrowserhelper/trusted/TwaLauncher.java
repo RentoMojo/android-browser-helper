@@ -182,14 +182,7 @@ public class TwaLauncher {
             launchTwa(twaBuilder, customTabsCallback, splashScreenStrategy, completionCallback,
                     fallbackStrategy);
         } else {
-            if (mProviderPackage.equals("org.mozilla.firefox")) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, twaBuilder.getUri());
-                browserIntent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                mContext.startActivity(browserIntent);
-                return;
-            } else {
-                fallbackStrategy.launch(mContext, twaBuilder, mProviderPackage, completionCallback);
-            }
+            fallbackStrategy.launch(mContext, twaBuilder, mProviderPackage, completionCallback);
         }
 
         // Remember who we connect to as the package that is allowed to delegate notifications
