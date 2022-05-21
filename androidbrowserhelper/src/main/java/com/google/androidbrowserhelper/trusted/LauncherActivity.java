@@ -225,7 +225,7 @@ public class LauncherActivity extends Activity {
         if (mTwaLauncher.getProviderPackage().equals("org.mozilla.firefox")) {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, twaBuilder.getUri());
             browserIntent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-            browserIntent.setDataAndType(uri, "text/html");
+            browserIntent.setDataAndType(twaBuilder.getUri(), "text/html");
             browserIntent.addCategory(Intent.CATEGORY_BROWSABLE);
             startActivity(browserIntent);
             finish();
