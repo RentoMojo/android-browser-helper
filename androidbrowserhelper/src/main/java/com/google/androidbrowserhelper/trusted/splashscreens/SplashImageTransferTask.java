@@ -16,9 +16,11 @@ package com.google.androidbrowserhelper.trusted.splashscreens;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -124,8 +126,40 @@ public class SplashImageTransferTask {
         }
 
         private boolean transferToCustomTabsProvider(File file) {
+            grantUriPermissionToSelf(file);
             return TrustedWebUtils.transferSplashImage(mContext, file, mAuthority, mProviderPackage,
                     mSession);
+        }
+
+        /**
+         * Grants this app read access to its own splash image URI.
+         *
+         * Chrome 152 added a check to CustomTabsConnection#receiveFile which rejects the transfer
+         * unless the *calling* app holds a granted read permission on the URI:
+         *
+         *   checkUriPermission(uri, Binder.getCallingPid(), Binder.getCallingUid(),
+         *           FLAG_GRANT_READ_URI_PERMISSION) != PERMISSION_GRANTED  ->  return false
+         *
+         * At that point the framework consults only explicitly granted permissions
+         * (UriGrantsManagerService#checkUriPermissionLocked); owning the FileProvider is not
+         * sufficient, as the owner shortcut applies to the grant path rather than to
+         * checkUriPermission. Because an app never needed to grant itself access to its own
+         * provider, the check fails and the splash screen is silently dropped. Granting
+         * explicitly satisfies it.
+         *
+         * This is additive: older Chrome versions never perform the check, and a redundant
+         * self-grant has no effect on them.
+         */
+        private void grantUriPermissionToSelf(File file) {
+            try {
+                Uri uri = FileProvider.getUriForFile(mContext, mAuthority, file);
+                mContext.grantUriPermission(mContext.getPackageName(), uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception e) {
+                // Never let this prevent the transfer attempt itself, which still succeeds on
+                // Chrome versions that do not perform the check.
+                Log.w(TAG, "Failed to grant splash image URI permission to self", e);
+            }
         }
 
         private long getLastAppUpdateTime() {
