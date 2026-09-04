@@ -147,6 +147,22 @@ public class SplashImageTransferTask {
          * provider, the check fails and the splash screen is silently dropped. Granting
          * explicitly satisfies it.
          *
+         * FLAG_GRANT_PERSISTABLE_URI_PERMISSION is required, not just FLAG_GRANT_READ. A plain
+         * read grant is a "basic grant", and UriGrantsManagerService#checkGrantUriPermissionUnlocked
+         * short-circuits it when the target already holds access through provider ownership:
+         *
+         *   final boolean basicGrant = (modeFlags
+         *           & (FLAG_GRANT_PERSISTABLE_URI_PERMISSION | FLAG_GRANT_PREFIX_URI_PERMISSION)) == 0;
+         *   if (basicGrant && targetHoldsPermission) {
+         *       // ... skip generating any bookkeeping
+         *       return -1;
+         *   }
+         *
+         * With no bookkeeping written, checkUriPermission still reports denied. Requesting a
+         * persistable grant makes basicGrant false, so a UriPermission record is actually created
+         * and the check passes. We never call takePersistableUriPermission, so nothing is
+         * persisted to disk; only the in-memory grant matters here.
+         *
          * This is additive: older Chrome versions never perform the check, and a redundant
          * self-grant has no effect on them.
          */
@@ -154,7 +170,8 @@ public class SplashImageTransferTask {
             try {
                 Uri uri = FileProvider.getUriForFile(mContext, mAuthority, file);
                 mContext.grantUriPermission(mContext.getPackageName(), uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
             } catch (Exception e) {
                 // Never let this prevent the transfer attempt itself, which still succeeds on
                 // Chrome versions that do not perform the check.
